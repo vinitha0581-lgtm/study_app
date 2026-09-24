@@ -94,7 +94,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 : ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: filteredSchedules.length,
-                    itemCount: filteredSchedules.length,
                     itemBuilder: (context, index) {
                       final schedule = filteredSchedules[index];
                       return ScheduleCard(
