@@ -1,0 +1,18 @@
+{
+  "name": "StudyFlow - Study Progress Tracker",
+  "short_name": "StudyFlow",
+  "description": "Track study progress, recurring study alarms, Pomodoro focus timer, and notes.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='128' fill='%236366f1'/><path d='M256 120L64 216l192 96 160-80v120h32V216L256 120zm0 216l-144-72v64c0 79.5 64.5 144 144 144s144-64.5 144-144v-64l-144 72z' fill='%23ffffff'/></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

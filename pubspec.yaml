@@ -1,0 +1,31 @@
+name: study_tracker_app
+description: "A comprehensive Study Progress Tracker with scheduling, notifications, timer, and notes."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.1.1
+  shared_preferences: ^2.2.2
+  intl: ^0.19.0
+  uuid: ^4.3.3
+  flutter_local_notifications: ^17.0.0
+  audioplayers: ^5.2.1
+  flutter_markdown: ^0.6.18+4
+  fl_chart: ^0.66.0
+  google_fonts: ^6.1.0
+  timezone: ^0.9.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/sounds/

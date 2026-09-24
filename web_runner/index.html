@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyFlow - Study Progress & Schedule Tracker</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            },
+            darkBg: '#0f172a',
+            darkCard: '#1e293b',
+            darkBorder: '#334155',
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Lucide Icons & Marked for Markdown -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Chart.js for analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6366f1">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed:', err));
+      });
+    }
+  </script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200">
+
+  <!-- Notification Banner if permissions needed -->
+  <div id="notif-permission-banner" class="hidden bg-indigo-950/80 border-b border-indigo-500/30 px-4 py-2.5 text-xs md:text-sm text-indigo-200 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <i data-lucide="bell-ring" class="w-4 h-4 text-indigo-400"></i>
+      <span>Enable desktop notifications to receive timely alerts when your study schedule starts!</span>
+    </div>
+    <button id="enable-notif-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1 rounded-md text-xs font-semibold">Enable</button>
+  </div>
+
+  <!-- Top Navigation Header -->
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-40 px-4 py-3.5">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+          <i data-lucide="graduation-cap" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-white tracking-tight flex items-center gap-2">
+            StudyFlow
+            <span class="text-[10px] font-semibold bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full border border-indigo-500/30">TRACKER</span>
+          </h1>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- Quick Note Button -->
+        <button id="quick-note-header-btn" class="hidden sm:flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-700 transition">
+          <i data-lucide="file-plus" class="w-3.5 h-3.5 text-indigo-400"></i>
+          <span>Quick Note</span>
+        </button>
+
+        <!-- Test Notification Button -->
+        <button id="test-alarm-btn" title="Test Notification Sound & Alert" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+          <i data-lucide="bell" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Sound Toggle -->
+        <button id="sound-toggle-btn" title="Toggle Sound Alarms" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+          <i data-lucide="volume-2" id="sound-icon" class="w-4 h-4 text-emerald-400"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6 mb-20 md:mb-6">
+    
+    <!-- Tab 1: Dashboard -->
+    <section id="tab-dashboard" class="tab-content space-y-6">
+      <!-- Streak & Today Stats -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div class="bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-2xl p-4 text-white shadow-lg shadow-indigo-600/20 flex flex-col justify-between">
+          <div class="flex items-center gap-2 text-indigo-200 text-xs font-medium">
+            <i data-lucide="flame" class="w-4 h-4 text-amber-300"></i>
+            <span>Study Streak</span>
+          </div>
+          <div class="mt-3">
+            <div id="stat-streak" class="text-2xl md:text-3xl font-black">1 Day</div>
+            <p class="text-[11px] text-indigo-200 mt-0.5">Keep learning daily!</p>
+          </div>
+        </div>
+
+        <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 flex flex-col justify-between">
+          <div class="flex items-center gap-2 text-slate-400 text-xs font-medium">
+            <i data-lucide="clock" class="w-4 h-4 text-cyan-400"></i>
+            <span>Today's Study</span>
+          </div>
+          <div class="mt-3">
+            <div id="stat-today-time" class="text-2xl md:text-3xl font-black text-white">0m</div>
+            <p class="text-[11px] text-slate-400 mt-0.5">Target: 2h 30m</p>
+          </div>
+        </div>
+
+        <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 flex flex-col justify-between">
+          <div class="flex items-center gap-2 text-slate-400 text-xs font-medium">
+            <i data-lucide="calendar-check" class="w-4 h-4 text-emerald-400"></i>
+            <span>Today's Schedules</span>
+          </div>
+          <div class="mt-3">
+            <div id="stat-today-schedules" class="text-2xl md:text-3xl font-black text-white">2</div>
+            <p class="text-[11px] text-slate-400 mt-0.5">Active reminders on</p>
+          </div>
+        </div>
+
+        <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 flex flex-col justify-between">
+          <div class="flex items-center gap-2 text-slate-400 text-xs font-medium">
+            <i data-lucide="book-open" class="w-4 h-4 text-purple-400"></i>
+            <span>Study Notes</span>
+          </div>
+          <div class="mt-3">
+            <div id="stat-total-notes" class="text-2xl md:text-3xl font-black text-white">1</div>
+            <p class="text-[11px] text-slate-400 mt-0.5">Checklists & insights</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming Study Banner -->
+      <div id="upcoming-banner" class="bg-gradient-to-r from-indigo-950/60 to-cyan-950/60 border border-indigo-500/30 rounded-2xl p-4 md:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+          <div class="w-11 h-11 rounded-xl bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-300">
+            <i data-lucide="alarm-clock-check" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <div class="text-[11px] font-bold text-indigo-400 uppercase tracking-wider">Next Scheduled Study Session</div>
+            <h3 id="upcoming-title" class="text-base font-bold text-white">Algorithms & Data Structures</h3>
+            <p id="upcoming-time" class="text-xs text-slate-400 mt-0.5">09:00 AM - 10:30 AM (90 mins) • Notification set 10m before</p>
+          </div>
+        </div>
+        <button id="upcoming-start-btn" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25 transition">
+          <i data-lucide="play" class="w-4 h-4 fill-white"></i>
+          <span>Start Focus Now</span>
+        </button>
+      </div>
+
+      <!-- Two column section: Today's Schedule & Quick Notes -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Today's Schedules (2 cols) -->
+        <div class="lg:col-span-2 space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <i data-lucide="calendar" class="w-4 h-4 text-indigo-400"></i>
+              <span>Today's Study Schedule</span>
+            </h2>
+            <button onclick="switchTab('schedule')" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium">Manage All</button>
+          </div>
+          <div id="dashboard-schedules-list" class="space-y-3">
+            <!-- Dynamic schedule cards injected here -->
+          </div>
+        </div>
+
+        <!-- Recent Study Notes (1 col) -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <i data-lucide="pen-tool" class="w-4 h-4 text-indigo-400"></i>
+              <span>Recent Notes & Checklists</span>
+            </h2>
+            <button onclick="openNoteModal()" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium">+ Note</button>
+          </div>
+          <div id="dashboard-notes-list" class="space-y-3">
+            <!-- Dynamic recent notes injected here -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 2: Schedule & Alarms -->
+    <section id="tab-schedule" class="tab-content hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-xl font-bold text-white">Study Schedules & Alarms</h2>
+          <p class="text-xs text-slate-400">Set recurring study blocks with automated notifications and reminders</p>
+        </div>
+        <button onclick="openScheduleModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 self-start sm:self-auto shadow-lg shadow-indigo-600/20 transition">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          <span>Add Study Schedule</span>
+        </button>
+      </div>
+
+      <!-- Day filter pills -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-slate-800">
+        <button class="day-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-600 text-white" data-day="0">All Days</button>
+        <button class="day-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-400 hover:bg-slate-700" data-day="1">Mon</button>
+        <button class="day-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-400 hover:bg-slate-700" data-day="2">Tue</button>
+        <button class="day-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-400 hover:bg-slate-700" data-day="3">Wed</button>
+        <button class="day-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-400 hover:bg-slate-700" data-day="4">Thu</button>
+        <button class="day-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-400 hover:bg-slate-700" data-day="5">Fri</button>
+        <button class="day-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-400 hover:bg-slate-700" data-day="6">Sat</button>
+        <button class="day-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-400 hover:bg-slate-700" data-day="7">Sun</button>
+      </div>
+
+      <!-- Schedules List -->
+      <div id="full-schedules-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- Tab 3: Focus Timer & Pomodoro -->
+    <section id="tab-timer" class="tab-content hidden space-y-6">
+      <div class="max-w-xl mx-auto flex flex-col items-center text-center space-y-6">
+        <!-- Mode switcher -->
+        <div class="bg-slate-800 p-1 rounded-xl flex items-center border border-slate-700 w-full max-w-xs">
+          <button id="timer-mode-pomodoro" class="flex-1 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white transition">Pomodoro (25/5)</button>
+          <button id="timer-mode-custom" class="flex-1 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition">Custom Focus</button>
+        </div>
+
+        <!-- Subject selection -->
+        <div class="w-full">
+          <label class="block text-xs font-medium text-slate-400 mb-2">Subject to Study:</label>
+          <select id="timer-subject-select" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+
+        <!-- Circular Timer Container -->
+        <div class="relative w-64 h-64 md:w-72 md:h-72 flex items-center justify-center">
+          <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="44" class="stroke-slate-800 fill-none stroke-[8]"></circle>
+            <circle id="timer-progress-circle" cx="50" cy="50" r="44" class="stroke-indigo-500 fill-none stroke-[8] transition-all duration-500 stroke-linecap-round" stroke-dasharray="276.46" stroke-dashoffset="0"></circle>
+          </svg>
+          <div class="absolute flex flex-col items-center">
+            <span id="timer-phase-badge" class="text-[11px] font-bold tracking-widest uppercase text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-500/20 mb-2">FOCUS TIME</span>
+            <span id="timer-display" class="text-4xl md:text-5xl font-black text-white font-mono tracking-tight">25:00</span>
+            <span id="timer-status-text" class="text-xs text-slate-400 mt-1">Ready to start</span>
+          </div>
+        </div>
+
+        <!-- Custom minute chips (shown when custom mode is selected) -->
+        <div id="custom-minutes-container" class="hidden flex items-center gap-2">
+          <button class="custom-min-btn px-3 py-1 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700" data-min="15">15m</button>
+          <button class="custom-min-btn px-3 py-1 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700" data-min="30">30m</button>
+          <button class="custom-min-btn px-3 py-1 rounded-lg text-xs font-semibold bg-indigo-600 text-white border border-indigo-500" data-min="45">45m</button>
+          <button class="custom-min-btn px-3 py-1 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700" data-min="60">60m</button>
+          <button class="custom-min-btn px-3 py-1 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700" data-min="90">90m</button>
+        </div>
+
+        <!-- Timer Controls -->
+        <div class="flex items-center justify-center gap-3">
+          <button id="timer-reset-btn" class="p-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition" title="Reset Timer">
+            <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+          </button>
+
+          <button id="timer-toggle-btn" class="px-8 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-base flex items-center gap-2 shadow-lg shadow-indigo-600/30 transition">
+            <i data-lucide="play" id="timer-btn-icon" class="w-5 h-5 fill-white"></i>
+            <span id="timer-btn-label">Start Session</span>
+          </button>
+
+          <button id="timer-note-btn" class="p-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-indigo-400 transition" title="Take Note for this Session">
+            <i data-lucide="file-edit" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 4: Study Notes & Checklists -->
+    <section id="tab-notes" class="tab-content hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-xl font-bold text-white">Study Notes & Checklists</h2>
+          <p class="text-xs text-slate-400">Capture key formulas, concepts, and checklist of items studied</p>
+        </div>
+        <button onclick="openNoteModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 self-start sm:self-auto shadow-lg shadow-indigo-600/20 transition">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          <span>Create Study Note</span>
+        </button>
+      </div>
+
+      <!-- Search & Subject Filter -->
+      <div class="flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1">
+          <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3 text-slate-500"></i>
+          <input type="text" id="notes-search-input" placeholder="Search notes, formulas, checklists..." class="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs md:text-sm text-white focus:outline-none focus:border-indigo-500">
+        </div>
+        <select id="notes-filter-subject" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs md:text-sm text-white focus:outline-none focus:border-indigo-500">
+          <option value="all">All Subjects</option>
+          <!-- Dynamic options -->
+        </select>
+      </div>
+
+      <!-- Notes Grid -->
+      <div id="full-notes-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- Tab 5: Analytics & Progress -->
+    <section id="tab-analytics" class="tab-content hidden space-y-6">
+      <div>
+        <h2 class="text-xl font-bold text-white">Study Analytics & Goal Progress</h2>
+        <p class="text-xs text-slate-400">Detailed breakdown of study habits, subject time distribution, and weekly goals</p>
+      </div>
+
+      <!-- Analytics Charts -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Subject Time Breakdown -->
+        <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5">
+          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+            <i data-lucide="pie-chart" class="w-4 h-4 text-indigo-400"></i>
+            <span>Study Time by Subject (Hours)</span>
+          </h3>
+          <div class="h-64 flex items-center justify-center">
+            <canvas id="subjectChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Weekly Progress Bar Chart -->
+        <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5">
+          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+            <i data-lucide="bar-chart-2" class="w-4 h-4 text-cyan-400"></i>
+            <span>Daily Study Duration (Minutes)</span>
+          </h3>
+          <div class="h-64 flex items-center justify-center">
+            <canvas id="weeklyChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subject Target Progress Bars -->
+      <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5">
+        <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+          <i data-lucide="target" class="w-4 h-4 text-emerald-400"></i>
+          <span>Weekly Subject Goals</span>
+        </h3>
+        <div id="analytics-subject-progress-list" class="space-y-4">
+          <!-- Dynamic goal bars -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Bottom Navigation Bar for Mobile/Desktop -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-slate-900/95 border-t border-slate-800 backdrop-blur z-40 py-2">
+    <div class="max-w-md mx-auto flex items-center justify-around px-4">
+      <button onclick="switchTab('dashboard')" class="nav-btn active flex flex-col items-center gap-1 text-indigo-400" data-target="dashboard">
+        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+        <span class="text-[10px] font-semibold">Home</span>
+      </button>
+      <button onclick="switchTab('schedule')" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200" data-target="schedule">
+        <i data-lucide="calendar" class="w-5 h-5"></i>
+        <span class="text-[10px] font-semibold">Schedule</span>
+      </button>
+      <button onclick="switchTab('timer')" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200" data-target="timer">
+        <i data-lucide="timer" class="w-5 h-5"></i>
+        <span class="text-[10px] font-semibold">Timer</span>
+      </button>
+      <button onclick="switchTab('notes')" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200" data-target="notes">
+        <i data-lucide="file-text" class="w-5 h-5"></i>
+        <span class="text-[10px] font-semibold">Notes</span>
+      </button>
+      <button onclick="switchTab('analytics')" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200" data-target="analytics">
+        <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+        <span class="text-[10px] font-semibold">Analytics</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Schedule Modal -->
+  <div id="schedule-modal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 id="schedule-modal-title" class="text-lg font-bold text-white">Create Study Schedule</h3>
+        <button onclick="closeScheduleModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      
+      <form id="schedule-form" class="space-y-4">
+        <input type="hidden" id="sch-id">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Subject</label>
+          <select id="sch-subject" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            <!-- Injected -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Schedule Title</label>
+          <input type="text" id="sch-title" placeholder="e.g. Physics Problem Solving" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Notes / Focus Description (Optional)</label>
+          <input type="text" id="sch-desc" placeholder="e.g. Chapter 4 Thermodynamics & Formulas" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Start Time</label>
+            <input type="time" id="sch-start-time" value="09:00" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">End Time</label>
+            <input type="time" id="sch-end-time" value="10:30" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Recurring Days</label>
+          <div class="flex items-center gap-1.5" id="sch-days-picker">
+            <button type="button" class="sch-day-btn flex-1 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white" data-day="1">M</button>
+            <button type="button" class="sch-day-btn flex-1 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white" data-day="2">T</button>
+            <button type="button" class="sch-day-btn flex-1 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white" data-day="3">W</button>
+            <button type="button" class="sch-day-btn flex-1 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white" data-day="4">T</button>
+            <button type="button" class="sch-day-btn flex-1 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white" data-day="5">F</button>
+            <button type="button" class="sch-day-btn flex-1 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-400" data-day="6">S</button>
+            <button type="button" class="sch-day-btn flex-1 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-400" data-day="7">S</button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Notification Alarm</label>
+          <select id="sch-reminder" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            <option value="0">At study start time</option>
+            <option value="5">5 minutes before</option>
+            <option value="10" selected>10 minutes before</option>
+            <option value="15">15 minutes before</option>
+            <option value="30">30 minutes before</option>
+          </select>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="closeScheduleModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20">Save Schedule</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Note Modal with Markdown & Checklist -->
+  <div id="note-modal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between">
+        <h3 id="note-modal-title" class="text-lg font-bold text-white">Study Note & Checklist</h3>
+        <button onclick="closeNoteModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <form id="note-form" class="space-y-4 flex-1 overflow-y-auto pr-1">
+        <input type="hidden" id="note-id">
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Subject</label>
+            <select id="note-subject" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+              <!-- Injected -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Linked Schedule (Optional)</label>
+            <select id="note-schedule" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+              <option value="">None (General Note)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Topic / Note Title</label>
+          <input type="text" id="note-title" placeholder="e.g. Graph BFS & Shortest Path Summary" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs font-semibold text-slate-400">Content (Markdown Supported)</label>
+            <button type="button" id="note-preview-toggle-btn" class="text-xs text-indigo-400 hover:text-indigo-300 font-semibold">Preview Markdown</button>
+          </div>
+          <textarea id="note-content" rows="4" placeholder="Write key formulas, code snippets, or takeaways..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-xs md:text-sm text-white focus:outline-none focus:border-indigo-500 font-mono"></textarea>
+          <div id="note-preview-box" class="hidden p-3 bg-slate-800 border border-slate-700 rounded-xl text-xs md:text-sm prose prose-invert max-w-none min-h-[100px]"></div>
+        </div>
+
+        <!-- Checklist Builder -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Studied Items & Concepts (Checklist)</label>
+          <div class="flex gap-2 mb-2">
+            <input type="text" id="note-check-input" placeholder="Add topic/item studied..." class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+            <button type="button" id="note-add-check-btn" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-xl text-xs font-semibold">Add</button>
+          </div>
+          <div id="note-checklist-items" class="space-y-1.5 max-h-32 overflow-y-auto">
+            <!-- Dynamic checklist items -->
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Tags (Comma separated)</label>
+          <input type="text" id="note-tags" placeholder="algorithms, leetcode, graph" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs md:text-sm text-white focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="closeNoteModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20">Save Note</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

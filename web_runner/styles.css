@@ -1,0 +1,93 @@
+/* Custom enhancements for StudyFlow Tracker */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+code, pre, .font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(51, 65, 85, 0.8);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.6);
+}
+
+/* Lucide icons alignment */
+svg {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Prose Markdown formatting in preview & cards */
+.prose h1, .prose h2, .prose h3 {
+  color: #f8fafc;
+  font-weight: 700;
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+.prose h1 { font-size: 1.25rem; }
+.prose h2 { font-size: 1.1rem; }
+.prose h3 { font-size: 0.95rem; }
+.prose p { margin-bottom: 0.5rem; line-height: 1.5; color: #cbd5e1; }
+.prose ul, .prose ol { padding-left: 1.25rem; margin-bottom: 0.5rem; }
+.prose ul { list-style-type: disc; }
+.prose ol { list-style-type: decimal; }
+.prose code {
+  background: #0f172a;
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.25rem;
+  color: #38bdf8;
+  font-size: 0.85em;
+}
+.prose pre {
+  background: #0b0f19;
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  overflow-x: auto;
+  margin: 0.5rem 0;
+}
+.prose pre code {
+  background: transparent;
+  padding: 0;
+  color: #e2e8f0;
+}
+.prose strong { color: #f1f5f9; }
+.prose blockquote {
+  border-left: 3px solid #6366f1;
+  padding-left: 0.75rem;
+  margin: 0.5rem 0;
+  color: #94a3b8;
+}
+
+/* Pulsing effect for active timer */
+@keyframes soft-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
+}
+
+.timer-active-pulse {
+  animation: soft-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
