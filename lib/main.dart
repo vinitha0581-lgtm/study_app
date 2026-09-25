@@ -18,9 +18,9 @@ void main() async {
   final storageService = StorageService();
   await storageService.init();
 
-  final notificationService = NotificationService();
-  await notificationService.init();
-  await notificationService.requestPermissions();
+  
+  
+
 
   runApp(
     MultiProvider(
